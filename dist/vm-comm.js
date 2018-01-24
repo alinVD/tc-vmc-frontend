@@ -3764,7 +3764,6 @@ function __export(m) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(__webpack_require__(23));
 __export(__webpack_require__(21));
-__export(__webpack_require__(46));
 
 
 /***/ }),
@@ -3836,7 +3835,7 @@ class VMConnection extends eventemitter3_1.EventEmitter {
         if (this.closed)
             throw new Error("attempt to send message on closed VM connection");
         let req = {
-            mtype: "request",
+            protocol: "request",
             id: this.requestCounter,
             type: type,
             payload: payload || undefined
@@ -3848,7 +3847,7 @@ class VMConnection extends eventemitter3_1.EventEmitter {
         if (this.closed)
             throw new Error("attempt to write to a stream on a closed VM connection");
         let req = {
-            mtype: "stream",
+            protocol: "stream",
             id: streamID,
             payload: payload || undefined
         };
@@ -6164,37 +6163,6 @@ __webpack_require__(3);
 exports.codec = {
   preset: __webpack_require__(1).preset
 };
-
-
-/***/ }),
-/* 46 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var RequestType;
-(function (RequestType) {
-    RequestType["ListDir"] = "fs:list_dir";
-    RequestType["CreateDir"] = "fs:create_dir";
-    RequestType["GetDrives"] = "fs:drives";
-    RequestType["CreateDrive"] = "fs:create_drive";
-    RequestType["AttachDrive"] = "fs:attach_drive";
-    RequestType["DetachDrive"] = "fs:detach_drive";
-    RequestType["GiveFile"] = "fs:give_file";
-    RequestType["GetFile"] = "fs:get_file";
-    RequestType["DeletePath"] = "fs:delete_path";
-    RequestType["AllowAccess"] = "fw:allow_access";
-    RequestType["GetHostCertificate"] = "fw:host_certificate";
-    RequestType["RegisterUser"] = "um:register";
-    RequestType["GrantUserPerms"] = "um:add_perms";
-    RequestType["RetractUserPerms"] = "um:retract_perms";
-    RequestType["GetExistingTerminals"] = "term:existing";
-    RequestType["StartTerminal"] = "term:start";
-    RequestType["ResizeTerminal"] = "term:resize";
-    RequestType["TerminalInput"] = "term:input";
-    RequestType["RestartVM"] = "vm:restart";
-})(RequestType = exports.RequestType || (exports.RequestType = {}));
 
 
 /***/ })

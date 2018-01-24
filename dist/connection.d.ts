@@ -1,7 +1,6 @@
 import { RSAKeyPair } from "ti-crypto";
 import { EventEmitter } from "eventemitter3";
 import { MessageCipher } from "./cipher";
-import { RequestType } from "./types";
 export declare enum CloseCode {
     Normal = 1000,
     GoingAway = 1001,
@@ -23,7 +22,7 @@ export declare class VMConnection extends EventEmitter {
     static NONCE_SIZE: number;
     private requestCounter;
     private closed;
-    send(type: RequestType, payload?: any): number;
+    send(type: string, payload?: any): number;
     write(streamID: number, payload: any): void;
     disconnect(code?: CloseCode, reason?: string): void;
     constructor(socket: WebSocket, cipher: MessageCipher);

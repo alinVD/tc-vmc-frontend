@@ -9,7 +9,8 @@ import {
     importPBKDF2Key,
     ECDHPublic,
     genAESKey,
-    randomBytes
+    randomBytes,
+    Signature
 } from "ti-crypto";
 import {
     EventEmitter, ListenerFn
@@ -26,13 +27,37 @@ import {
     MessageCipher,
     SealedMessage
 } from "./cipher";
-import {
-    RequestType,
-    Request,
-    Reply,
-    UserHandshake,
-    ServerHandshake
-} from "./types";
+
+interface Request {
+    protocol: "request"|"stream";
+    id: number;
+    type?: string;
+    payload?: Uint8Array;
+}
+
+type ReplyType = "reply"|"error"|"progress"|"stream";
+
+interface Reply {
+    type: ReplyType;
+    id: number;
+    payload?: any;
+}
+
+interface Handshake {
+    version: number;
+    key: Uint8Array;
+    sig: Signature;
+    nonce: Uint8Array;
+}
+
+interface ServerHandshake extends Handshake {
+    iterations: number;
+    salt: Uint8Array;
+}
+
+interface UserHandshake extends Handshake {
+    user: string;
+}
 
 defaultCodec.preset.addExtPacker(0, Date, datePacker);
 defaultCodec.preset.addExtUnpacker(0, dateUnpacker)
@@ -79,12 +104,12 @@ export class VMConnection extends EventEmitter {
      * @param payload The request payload.
      * @returns The request ID, so a reply can be mapped back.
      */
-    public send(type: RequestType, payload?: any): number {
+    public send(type: string, payload?: any): number {
         if (this.closed)
             throw new Error("attempt to send message on closed VM connection");
 
         let req: Request = {
-            mtype: "request",
+            protocol: "request",
             id: this.requestCounter,
             type: type,
             payload: payload || undefined
@@ -108,7 +133,7 @@ export class VMConnection extends EventEmitter {
             throw new Error("attempt to write to a stream on a closed VM connection");
         
         let req: Request = {
-            mtype: "stream",
+            protocol: "stream",
             id: streamID,
             payload: payload || undefined
         };
