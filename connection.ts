@@ -90,7 +90,7 @@ export enum CloseCode {
     BadGateway
 }
 
-export class VMConnection extends EventEmitter {
+export class Connection extends EventEmitter {
 
     static PROTOCOL_VERSION = 0;
     static NONCE_SIZE = 12;
@@ -181,13 +181,13 @@ export class VMConnection extends EventEmitter {
 
 }
 
-export async function dial(vmAddr: string, userID: string, userKey: RSAKeyPair): Promise<VMConnection> {
+export async function dial(vmAddr: string, userID: string, userKey: RSAKeyPair): Promise<Connection> {
     let ecPair = await genECDHPair("P-256", true);
     let ecPublic = await ecPair.public.export("spki");
     let signature = await userKey.private.sign(ecPublic);
-    let nonce = new Uint8Array(VMConnection.NONCE_SIZE);
+    let nonce = new Uint8Array(Connection.NONCE_SIZE);
     let auth: UserHandshake = {
-        version: VMConnection.PROTOCOL_VERSION,
+        version: Connection.PROTOCOL_VERSION,
         key: ecPublic,
         sig: signature,
         nonce: nonce,
@@ -198,7 +198,7 @@ export async function dial(vmAddr: string, userID: string, userKey: RSAKeyPair):
     ws.send(encode(auth));
     let server: ServerHandshake = decode((await readMessage(ws)).data);
 
-    if (server.version != VMConnection.PROTOCOL_VERSION)
+    if (server.version != Connection.PROTOCOL_VERSION)
         throw new Error("mismatched client/server protocol version");
 
     let serverPub = await importECDHPublic(server.key, "spki", "P-256");
@@ -209,7 +209,7 @@ export async function dial(vmAddr: string, userID: string, userKey: RSAKeyPair):
     let serverKey = await importAESKey(keys.subarray(0, 32), "AES-GCM");
     let clientKey = await importAESKey(keys.subarray(32, 64), "AES-GCM");
 
-    return new VMConnection(ws, new MessageCipher(
+    return new Connection(ws, new MessageCipher(
         clientKey,
         nonce,
         serverKey,
