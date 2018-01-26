@@ -3,25 +3,16 @@
   "version": "1.1.0",
   "private": true,
   "description": "tiCrypt VM websocket client communication layer",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "test": "karma start",
-    "start": "webpack && minify dist/vm-comm.js -o dist/vm-comm.min.js"
-  },
+  "main": "dist/index.ts",
   "author": "Sam Claus",
   "license": "proprietary",
   "bugs": {
-    "url": "https://github.com/alinVD/tc-vmcontrol"
+    "url": "https://github.com/alinVD/tc-vmc-frontend"
   },
-  "devDependencies": {
+  "dependencies": {
     "@types/msgpack-lite": "^0.1.6",
-    "declaration-bundler-webpack-plugin": "^1.0.3",
     "eventemitter3": "^3.0.0",
     "msgpack-lite": "^0.1.26",
-    "ti-crypto": "^1.1.0",
-    "ts-loader": "^3.3.0",
-    "typescript": "^2.6.2"
-  },
-  "dependencies": {}
+    "ti-crypto": "^1.1.0"
+  }
 }
