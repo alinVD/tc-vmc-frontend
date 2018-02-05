@@ -62,11 +62,11 @@ class VMConnection extends eventemitter3_1.EventEmitter {
                 switch (decrypted[lastIndex]) {
                     case Protocol.Reply:
                         let reply = msgpack_lite_1.decode(decrypted.subarray(0, lastIndex));
-                        this.emit("reply", reply.rid, reply.payload);
+                        this.emit("reply", reply.rid, msgpack_lite_1.decode(reply.payload));
                         return;
                     case Protocol.Stream:
                         let chunk = msgpack_lite_1.decode(decrypted.subarray(0, lastIndex));
-                        this.emit("stream", chunk.streamID, chunk.content);
+                        this.emit("stream", chunk.streamID, msgpack_lite_1.decode(chunk.content));
                         return;
                 }
             }, err => console.log("VM connection decryption error:", err));

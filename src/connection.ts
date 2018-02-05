@@ -36,17 +36,12 @@ interface Request {
 
 interface Reply {
     rid:      number;
-    payload?: any;
+    payload?: Uint8Array;
 }
 
-interface StreamChunkOut {
+interface StreamChunk {
     streamID: number;
     content:  Uint8Array;
-}
-
-interface StreamChunkIn {
-    streamID: number;
-    content:  any;
 }
 
 interface Handshake {
@@ -79,7 +74,7 @@ function dateUnpacker(buf: Uint8Array): Date {
 enum Protocol {
     Request = 0,
     Reply   = 1,
-    Stream  = 2,
+    Stream  = 2
 }
 
 /**
@@ -142,7 +137,7 @@ export class VMConnection extends EventEmitter {
         if (this.closed)
             throw new Error("attempt to write to a stream on a closed VM connection");
         
-        let chunk: StreamChunkOut = {
+        let chunk: StreamChunk = {
             streamID: streamID,
             content: payload ? encode(payload) : undefined
         };
@@ -189,11 +184,11 @@ export class VMConnection extends EventEmitter {
                 switch (decrypted[lastIndex]) {
                     case Protocol.Reply:
                         let reply: Reply = decode(decrypted.subarray(0, lastIndex));
-                        this.emit("reply", reply.rid, reply.payload);
+                        this.emit("reply", reply.rid, decode(reply.payload));
                         return;
                     case Protocol.Stream:
-                        let chunk: StreamChunkIn = decode(decrypted.subarray(0, lastIndex));
-                        this.emit("stream", chunk.streamID, chunk.content);
+                        let chunk: StreamChunk = decode(decrypted.subarray(0, lastIndex));
+                        this.emit("stream", chunk.streamID, decode(chunk.content));
                         return;
                 } 
             }, err => console.log("VM connection decryption error:", err));
