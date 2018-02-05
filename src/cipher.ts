@@ -1,25 +1,5 @@
-import {
-    AESKey,
-    AESEncryptOptions,
-    importAESKey,
-    RSAKeyPair
-} from "ti-crypto";
-import {
-    encode,
-    decode
-} from "msgpack-lite";
-
-export const VERSION: Version = {
-    maj: 0,
-    min: 0,
-    pat: 0
-}
-
-export interface Version {
-    maj: number;
-    min: number;
-    pat: number;
-}
+import { AESKey } from "ti-crypto";
+import { encode, decode } from "msgpack-lite";
 
 export interface SealedMessage {
     cipherText: Uint8Array;

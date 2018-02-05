@@ -1,13 +1,22 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
-        "removeComments": true,
-        "preserveConstEnums": true,
-        "outDir": "dist",
-        "sourceMap": true,
+        "alwaysStrict": true,
         "declaration": true,
-        "noImplicitAny": true
+        "lib": [
+            "dom",
+            "es2015"
+        ],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "es6",
+        "outDir": "./dist/",
+        "noEmitOnError": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "pretty": true,
+        "removeComments": true
     },
     "files": [
         "src/index.ts",

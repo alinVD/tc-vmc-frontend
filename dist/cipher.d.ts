@@ -1,10 +1,4 @@
 import { AESKey } from "ti-crypto";
-export declare const VERSION: Version;
-export interface Version {
-    maj: number;
-    min: number;
-    pat: number;
-}
 export interface SealedMessage {
     cipherText: Uint8Array;
     tag: Uint8Array;

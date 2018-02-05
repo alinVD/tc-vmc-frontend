@@ -13,7 +13,7 @@ import {
     Signature
 } from "ti-crypto";
 import {
-    EventEmitter, ListenerFn
+    EventEmitter
 } from "eventemitter3";
 import {
     codec as defaultCodec,
@@ -29,18 +29,24 @@ import {
 } from "./cipher";
 
 interface Request {
-    protocol: "request"|"stream";
-    id: number;
-    type?: string;
+    id:       number;
+    type:     string;
     payload?: Uint8Array;
 }
 
-type ReplyType = "reply"|"error"|"progress"|"stream";
-
 interface Reply {
-    type: ReplyType;
-    id: number;
+    rid:      number;
     payload?: any;
+}
+
+interface StreamChunkOut {
+    streamID: number;
+    content:  Uint8Array;
+}
+
+interface StreamChunkIn {
+    streamID: number;
+    content:  any;
 }
 
 interface Handshake {
@@ -68,6 +74,12 @@ function datePacker(d: Date): Buffer {
 
 function dateUnpacker(buf: Uint8Array): Date {
     return new Date(decode(buf));
+}
+
+enum Protocol {
+    Request = 0,
+    Reply   = 1,
+    Stream  = 2,
 }
 
 /**
@@ -100,22 +112,22 @@ export class VMConnection extends EventEmitter {
 
     /**
      * Encodes and sends a request, returning the request ID.
-     * @param type The string message type ("namespace:target").
-     * @param payload The request payload.
-     * @returns The request ID, so a reply can be mapped back.
      */
     public send(type: string, payload?: any): number {
         if (this.closed)
             throw new Error("attempt to send message on closed VM connection");
 
         let req: Request = {
-            protocol: "request",
             id: this.requestCounter,
             type: type,
             payload: payload || undefined
         };
+        let encReq = encode(req);
+        let toEncrypt = new Uint8Array(encReq.length + 1);
+        toEncrypt.set(encReq);
+        toEncrypt[toEncrypt.length - 1] = Protocol.Request;
 
-        this.cipher.encryptMessage(encode(req)).then(
+        this.cipher.encryptMessage(toEncrypt).then(
             sealed => this.socket.send(encode(sealed).buffer),
             err => console.log("VM connection encryption error:", err)
         );
@@ -125,20 +137,21 @@ export class VMConnection extends EventEmitter {
 
     /**
      * Writes to a bidirectional stream opened VM-side.
-     * @param streamID The stream to write to.
-     * @param payload The input payload.
      */
     public write(streamID: number, payload: any) {
         if (this.closed)
             throw new Error("attempt to write to a stream on a closed VM connection");
         
-        let req: Request = {
-            protocol: "stream",
-            id: streamID,
-            payload: payload || undefined
+        let chunk: StreamChunkOut = {
+            streamID: streamID,
+            content: payload ? encode(payload) : undefined
         };
+        let encChunk = encode(chunk);
+        let toEncrypt = new Uint8Array(encChunk.length + 1);
+        toEncrypt.set(encChunk);
+        toEncrypt[toEncrypt.length - 1] = Protocol.Stream;
 
-        this.cipher.encryptMessage(encode(req)).then(
+        this.cipher.encryptMessage(toEncrypt).then(
             sealed => this.socket.send(encode(sealed).buffer),
             err => console.log("VM connection encryption error:", err)
         );
@@ -171,10 +184,18 @@ export class VMConnection extends EventEmitter {
                 console.error("received bad msgpack:", message.data);
                 return
             }
-            let x: ListenerFn;
             this.cipher.decryptMessage(encryptedReply).then(decrypted => {
-                let reply: Reply = decode(decrypted);
-                this.emit(reply.type, reply.id, reply.payload);
+                let lastIndex = decrypted.length - 1;
+                switch (decrypted[lastIndex]) {
+                    case Protocol.Reply:
+                        let reply: Reply = decode(decrypted.subarray(0, lastIndex));
+                        this.emit("reply", reply.rid, reply.payload);
+                        return;
+                    case Protocol.Stream:
+                        let chunk: StreamChunkIn = decode(decrypted.subarray(0, lastIndex));
+                        this.emit("stream", chunk.streamID, chunk.content);
+                        return;
+                } 
             }, err => console.log("VM connection decryption error:", err));
         };
     }
